@@ -1,0 +1,251 @@
+#!/usr/bin/env python3
+"""
+Airport Kiosk System
+Features: Flight Info, Boarding List, Currency Exchange,
+Ticket Validation, Baggage Info
+"""
+from datetime import datetime, timedelta
+import time
+
+# ===== FLIGHT DATABASE =====
+
+flights = {
+    "AI101": {
+        "airline": "Air India",
+        "destination": "Mumbai",
+        "departure_time": "14:30",
+        "gate": "A5",
+        "status": "Boarding",
+        "boarding_list": ["P001", "P002", "P003", "P004", "P005"],
+        "seats_booked": 145,
+        "total_seats": 180
+    },
+    "UK202": {
+        "airline": "UK Airways",
+        "destination": "Delhi",
+        "departure_time": "16:45",
+        "gate": "B12",
+        "status": "Gate Closed",
+        "boarding_list": ["P006", "P007", "P008"],
+        "seats_booked": 98,
+        "total_seats": 120
+    },
+    "6E303": {
+        "airline": "IndiGo",
+        "destination": "Bangalore",
+        "departure_time": "18:00",
+        "gate": "C3",
+        "status": "Boarding",
+        "boarding_list": ["P009", "P010", "P011", "P012"],
+        "seats_booked": 160,
+        "total_seats": 180
+    },
+    "BA404": {
+        "airline": "British Airways",
+        "destination": "London",
+        "departure_time": "22:15",
+        "gate": "D8",
+        "status": "Check-in Open",
+        "boarding_list": ["P013", "P014"],
+        "seats_booked": 200,
+        "total_seats": 250
+    }
+}
+
+# ===== EXCHANGE RATES =====
+
+exchange_rates = {
+    "INR": 1.0,
+    "USD": 83.5,
+    "EUR": 91.2,
+    "GBP": 105.8,
+    "AED": 22.75,
+    "SGD": 62.5
+}
+
+# ===== PASSENGER TICKETS =====
+
+passenger_tickets = {
+    "P001": {"name": "Rajesh Kumar", "flight": "AI101", "seat": "12A", "status": "Checked-in"},
+    "P002": {"name": "Priya Singh", "flight": "AI101", "seat": "12B", "status": "Checked-in"},
+    "P003": {"name": "Amit Patel", "flight": "AI101", "seat": "13A", "status": "Boarding"},
+    "P004": {"name": "Sneha Verma", "flight": "AI101", "seat": "13B", "status": "Boarding"},
+    "P005": {"name": "Vikram Joshi", "flight": "AI101", "seat": "14A", "status": "Boarding"},
+    "P006": {"name": "Deepak Sharma", "flight": "UK202", "seat": "5A", "status": "Checked-in"},
+    "P009": {"name": "Anjali Roy", "flight": "6E303", "seat": "8C", "status": "Boarding"},
+}
+
+# ===== HELPERS =====
+
+def clear_screen():
+    print("\n" * 2)
+
+def print_header(title):
+    print("=" * 60)
+    print(f" {title.center(56)}")
+    print("=" * 60)
+
+# ===== MAIN MENU =====
+
+def show_main_menu():
+    clear_screen()
+    print_header("AIRPORT INFORMATION KIOSK")
+    print("\n1. Flight Information & Status")
+    print("2. Check Boarding List")
+    print("3. Validate Ticket")
+    print("4. Currency Exchange Calculator")
+    print("5. Baggage Information")
+    print("6. Airport Services & Facilities")
+    print("7. Exit Kiosk")
+    return input("\nEnter choice (1-7): ").strip()
+
+# ===== FLIGHT INFO =====
+
+def show_flight_info():
+    clear_screen()
+    print_header("FLIGHT INFORMATION")
+    print(f"{'Flight':<10}{'Airline':<20}{'Dest':<15}{'Time':<8}{'Gate':<6}{'Status'}")
+    print("-" * 70)
+    for fid, d in flights.items():
+        print(f"{fid:<10}{d['airline']:<20}{d['destination']:<15}"
+              f"{d['departure_time']:<8}{d['gate']:<6}{d['status']}")
+    fc = input("\nEnter Flight ID for details, or 'b' to go back: ").strip().upper()
+    if fc in flights:
+        show_flight_details(fc)
+
+def show_flight_details(flight_id):
+    clear_screen()
+    f = flights[flight_id]
+    print_header(f"FLIGHT {flight_id} - DETAILS")
+    print(f"Airline: {f['airline']}")
+    print(f"Destination: {f['destination']}")
+    print(f"Departure: {f['departure_time']} | Gate: {f['gate']}")
+    print(f"Status: {f['status']}")
+    occ = f['seats_booked'] / f['total_seats'] * 100
+    print(f"Seats: {f['seats_booked']}/{f['total_seats']} ({occ:.1f}% full)")
+    input("\nPress Enter to return...")
+
+# ===== BOARDING LIST =====
+
+def show_boarding_list():
+    clear_screen()
+    print_header("BOARDING LIST")
+    fid = input("Enter Flight ID: ").strip().upper()
+    if fid not in flights:
+        print("Flight not found.")
+        time.sleep(1.5)
+        return
+    f = flights[fid]
+    print_header(f"{fid} - {f['airline']} to {f['destination']}")
+    print(f"{'#':<4}{'Passenger ID':<14}{'Name':<22}{'Seat'}")
+    print("-" * 55)
+    for i, pid in enumerate(f['boarding_list'], 1):
+        if pid in passenger_tickets:
+            p = passenger_tickets[pid]
+            print(f"{i:<4}{pid:<14}{p['name']:<22}{p['seat']}")
+    input("\nPress Enter to return...")
+
+# ===== TICKET VALIDATION =====
+
+def validate_ticket():
+    clear_screen()
+    print_header("TICKET VALIDATION")
+    pid = input("Enter Passenger ID: ").strip().upper()
+    if pid not in passenger_tickets:
+        print("Ticket not found.")
+        time.sleep(1.5)
+        return
+    t = passenger_tickets[pid]
+    f = flights[t['flight']]
+    print_header("YOUR TICKET")
+    print(f"Name: {t['name']} | ID: {pid}")
+    print(f"Flight: {t['flight']} ({f['airline']}) to {f['destination']}")
+    print(f"Seat: {t['seat']} | Gate: {f['gate']}")
+    print(f"Status: {t['status']}")
+    if pid in f['boarding_list']:
+        pos = f['boarding_list'].index(pid) + 1
+        print(f"Boarding Position: {pos}")
+    input("\nPress Enter to return...")
+
+# ===== CURRENCY EXCHANGE =====
+
+def currency_exchange():
+    clear_screen()
+    print_header("CURRENCY EXCHANGE")
+    print("Available currencies:")
+    print(", ".join(f"{c}=INR {r}" for c, r in exchange_rates.items()))
+    fc = input("\nFrom currency: ").strip().upper()
+    tc = input("To currency: ").strip().upper()
+    if fc not in exchange_rates or tc not in exchange_rates:
+        print("Currency not found.")
+        time.sleep(1.5)
+        return
+    try:
+        amt = float(input(f"Amount in {fc}: "))
+    except ValueError:
+        print("Invalid amount.")
+        time.sleep(1.5)
+        return
+    inr = amt * exchange_rates[fc]
+    result = inr / exchange_rates[tc]
+    print(f"\n{amt:.2f} {fc} = {result:.2f} {tc}")
+    print(f"After 2% fee: {result * 0.98:.2f} {tc}")
+    input("\nPress Enter to return...")
+
+# ===== BAGGAGE =====
+
+def baggage_info():
+    clear_screen()
+    print_header("BAGGAGE ALLOWANCE")
+    rules = {
+        "Economy": {"Carry-on": "7 kg", "Checked": "20 kg"},
+        "Premium Economy": {"Carry-on": "12 kg", "Checked": "46 kg"},
+        "Business": {"Carry-on": "14 kg", "Checked": "96 kg"}
+    }
+    for cls, r in rules.items():
+        print(f"\n{cls}:")
+        for k, v in r.items():
+            print(f"  {k}: {v}")
+    print("\nExcess baggage: INR 1000/kg")
+    input("\nPress Enter to return...")
+
+# ===== SERVICES =====
+
+def airport_services():
+    clear_screen()
+    print_header("AIRPORT SERVICES")
+    svcs = {
+        "Food & Beverage": "Terminal 2, Levels 1-3",
+        "Medical": "Terminal 1, GF (24hrs)",
+        "Lounge": "Terminal 1, Level 3 (24hrs)",
+        "Business Center": "Terminal 2, Level 2",
+        "Shopping": "All Terminals (05:00-23:30)"
+    }
+    for s, loc in svcs.items():
+        print(f"  {s}: {loc}")
+    input("\nPress Enter to return...")
+
+# ===== ENTRY POINT =====
+
+def main():
+    while True:
+        c = show_main_menu()
+        actions = {
+            "1": show_flight_info,
+            "2": show_boarding_list,
+            "3": validate_ticket,
+            "4": currency_exchange,
+            "5": baggage_info,
+            "6": airport_services
+        }
+        if c in actions:
+            actions[c]()
+        elif c == "7":
+            print_header("Thank you! Have a safe flight!")
+            break
+        else:
+            print("Invalid choice - please enter 1-7.")
+            time.sleep(1)
+
+if __name__ == "__main__":
+    main()
